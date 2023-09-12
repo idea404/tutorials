@@ -1,39 +1,29 @@
-import { localConfig } from "../tests/testConfig";
 import { HardhatUserConfig } from "hardhat/config";
+import { localConfig } from "../tests/testConfig";
 
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
 
-import "@matterlabs/hardhat-zksync-verify";
-
-// dynamically changes endpoints for local tests
-const zkSyncTestnet = {
-  url: localConfig.L2Network,
-  ethNetwork: localConfig.L1Network,
-  zksync: true,
-};
-
 const config: HardhatUserConfig = {
   zksolc: {
     version: "latest",
-    settings: {},
+    settings: {
+      isSystem: true,
+    },
   },
   defaultNetwork: "zkSyncTestnet",
   networks: {
     hardhat: {
-      zksync: false,
+      zksync: true,
     },
-    zkSyncTestnet,
+    zkSyncTestnet: {
+      url: localConfig.L2Network,
+      ethNetwork: localConfig.L1Network, // Can also be the RPC URL of the network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
+      zksync: true,
+    },
   },
   solidity: {
     version: "0.8.17",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-      viaIR: true,
-    },
   },
 };
 
