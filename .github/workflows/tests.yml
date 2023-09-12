@@ -50,6 +50,11 @@ jobs:
       matrix:
         node-version: ["18.15.0"]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Download and extract era_test_node binary
         run: |
           wget https://github.com/matter-labs/era-test-node/releases/download/v0.1.0-alpha.2/era_test_node-v0.1.0-alpha.2-x86_64-apple-darwin.tar.gz
@@ -58,47 +63,24 @@ jobs:
 
       - name: Run era_test_node binary
         run: ./era_test_node run &
-  custom-aa-tests:
-    name: Custom AA Tests
-    needs: im-setup
-    runs-on: macos-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        node-version: ["18.15.0"]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+
+      - name: Wait for era_test_node to be ready
+        run: |
+          while ! curl -s -X POST -d '{"jsonrpc":"2.0","method":"net_version","id":1}' -H 'Content-Type: application/json' http://127.0.0.1:8011; do sleep 1; done
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
 
       - name: Custom AA tests
         run: |
-          cd custom-aa && yarn && yarn test
-  hello-world-tests:
-    name: Hello World Tests
-    needs: im-setup
-    runs-on: macos-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        node-version: ["18.15.0"]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
+          cd custom-aa && yarn test
 
       - name: Hello World tests
         run: |
-          cd hello-world && yarn && yarn test
+          cd hello-world && yarn test
